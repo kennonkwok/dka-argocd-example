@@ -1,0 +1,38 @@
+---
+# Root Application - App of Apps Pattern
+# This Application manages three child Applications that deploy Datadog Kubernetes Autoscaling
+# in three stages using sync waves to manage dependencies.
+#
+# To deploy: kubectl apply -f argocd/root-app.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dka-root
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io  # Ensures cascading deletion
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/kennonkwok/dka-argocd-example.git
+    targetRevision: HEAD
+    path: argocd/apps  # Directory containing child Application manifests
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd  # Child Applications are created in argocd namespace
+
+  syncPolicy:
+    automated:
+      prune: true      # Remove resources that no longer exist in Git
+      selfHeal: true   # Automatically sync when cluster state deviates
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

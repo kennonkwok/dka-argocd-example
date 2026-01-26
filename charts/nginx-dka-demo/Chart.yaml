@@ -1,0 +1,13 @@
+apiVersion: v2
+name: nginx-dka-demo
+description: NGINX application with Datadog Pod Autoscaler for demonstrating Datadog Kubernetes Autoscaling
+type: application
+version: 0.1.0
+appVersion: "stable"
+keywords:
+  - nginx
+  - datadog
+  - autoscaling
+  - dka
+maintainers:
+  - name: Kennon Kwok

@@ -1,0 +1,11 @@
+---
+# Datadog Namespace
+# Created in sync wave -1 to ensure it exists before the operator is deployed.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: datadog
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"  # Create before operator
+  labels:
+    name: datadog

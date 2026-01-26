@@ -1,0 +1,28 @@
+# Datadog Secrets
+# Never commit actual secrets to Git
+manifests/stage1-operator/secret.yaml
+**/secret.yaml
+!**/secret.yaml.example
+
+# Kubernetes local configs
+*.kubeconfig
+kubeconfig
+.kube/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Helm
+charts/**/charts/
+charts/**/*.tgz
+
+# Temporary files
+*.tmp
+*.log
+*.bak
+.*.swp

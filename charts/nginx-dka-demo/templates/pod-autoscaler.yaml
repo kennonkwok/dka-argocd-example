@@ -1,0 +1,60 @@
+{{- if .Values.autoscaler.enabled }}
+---
+# DatadogPodAutoscaler
+# Manages scaling of the NGINX deployment based on Datadog metrics.
+# This CRD is provided by the Datadog Operator.
+apiVersion: datadoghq.com/v1alpha1
+kind: DatadogPodAutoscaler
+metadata:
+  name: {{ .Release.Name }}-dpa
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+spec:
+  # Target workload to scale
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Release.Name }}
+
+  # Owner designation - "Local" means Datadog cluster agent manages scaling
+  # Alternative: "External" for managing from Datadog cloud
+  owner: Local
+
+  # Policy for applying scaling decisions
+  applyPolicy:
+    mode: Apply  # Actually apply scaling decisions (vs. Dryrun)
+    update:
+      strategy: Auto  # Automatically update when recommendations change
+
+  # Scaling constraints
+  constraints:
+    minReplicas: {{ .Values.autoscaler.minReplicas }}
+    maxReplicas: {{ .Values.autoscaler.maxReplicas }}
+
+  # Scaling behavior policies
+  policy:
+    # Scale-up policy
+    upscale:
+      strategy: EventBased  # Scale up based on events/metrics
+      rules:
+        - type: Percent
+          value: {{ .Values.autoscaler.scaleUp.percentIncrease }}  # Increase by N%
+          periodSeconds: {{ .Values.autoscaler.scaleUp.periodSeconds }}  # Cooldown period
+
+    # Scale-down policy
+    downscale:
+      strategy: EventBased  # Scale down based on events/metrics
+      rules:
+        - type: Percent
+          value: {{ .Values.autoscaler.scaleDown.percentDecrease }}  # Decrease by N%
+          periodSeconds: {{ .Values.autoscaler.scaleDown.periodSeconds }}  # Cooldown period
+
+  # Scaling objectives (metrics to optimize)
+  objectives:
+    - type: cpu
+      source: Datadog  # Use Datadog metrics (vs. Kubernetes metrics)
+      value: {{ .Values.autoscaler.targetCPUUtilization }}  # Target CPU utilization percentage
+{{- end }}

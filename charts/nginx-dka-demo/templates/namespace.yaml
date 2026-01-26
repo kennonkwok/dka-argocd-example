@@ -1,0 +1,11 @@
+---
+# Application Namespace
+# Created in sync wave -1 to ensure it exists before the deployment.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"  # Create before other resources
+  labels:
+    name: {{ .Release.Namespace }}

@@ -1,0 +1,38 @@
+---
+# Stage 2: DatadogAgent Application
+# Deploys the DatadogAgent custom resource with workload autoscaling enabled.
+# Sync wave 1 ensures this deploys after the operator (wave 0) is ready,
+# as the DatadogAgent CRD must be available.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: datadog-agent
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"  # Deploy after operator
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/kennonkwok/dka-argocd-example.git
+    targetRevision: HEAD
+    path: manifests/stage2-agent
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: datadog
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

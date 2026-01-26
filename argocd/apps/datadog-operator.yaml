@@ -1,0 +1,52 @@
+---
+# Stage 1: Datadog Operator Application
+# Deploys the Datadog Operator using Helm chart and creates the datadog namespace.
+# Sync wave 0 ensures this deploys first, as the DatadogAgent CR (wave 1) requires
+# the operator's CRDs to be available.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: datadog-operator
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"  # Deploy first
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  # Multiple sources: Helm chart + Git manifests
+  sources:
+    # Source 1: Datadog Operator Helm chart
+    - repoURL: https://helm.datadoghq.com
+      chart: datadog-operator
+      targetRevision: 2.11.1  # Pin specific version for reproducibility
+      helm:
+        releaseName: datadog-operator
+        values: |
+          # Minimal configuration - operator runs with defaults
+          # CRDs are installed automatically by Helm
+          replicaCount: 1
+
+    # Source 2: Additional manifests from Git (namespace)
+    - repoURL: https://github.com/kennonkwok/dka-argocd-example.git
+      targetRevision: HEAD
+      path: manifests/stage1-operator
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: datadog  # Operator will be installed in datadog namespace
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true  # Create datadog namespace if it doesn't exist
+      - ServerSideApply=true  # Use server-side apply for CRDs
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

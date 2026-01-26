@@ -1,0 +1,57 @@
+# Default values for nginx-dka-demo
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Number of initial replicas for the NGINX deployment
+replicaCount: 5
+
+# NGINX image configuration
+image:
+  repository: nginx
+  tag: stable
+  pullPolicy: IfNotPresent
+
+# Resource requests for the NGINX containers
+# These values are used by Datadog to calculate CPU utilization
+resources:
+  requests:
+    cpu: 500m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+
+# Datadog Pod Autoscaler configuration
+autoscaler:
+  # Enable or disable the DatadogPodAutoscaler
+  enabled: true
+
+  # Minimum number of replicas (scaling lower bound)
+  minReplicas: 3
+
+  # Maximum number of replicas (scaling upper bound)
+  maxReplicas: 100
+
+  # Target CPU utilization percentage
+  # Datadog will scale to maintain this average CPU across all pods
+  targetCPUUtilization: 70
+
+  # Scale-up policy configuration
+  scaleUp:
+    # Percentage increase per scaling event
+    # Example: 50% means if current replicas = 10, scale up by 5 (to 15)
+    percentIncrease: 50
+
+    # Cooldown period between scale-up events (in seconds)
+    # Prevents rapid successive scale-ups
+    periodSeconds: 120
+
+  # Scale-down policy configuration
+  scaleDown:
+    # Percentage decrease per scaling event
+    # Example: 20% means if current replicas = 10, scale down by 2 (to 8)
+    percentDecrease: 20
+
+    # Cooldown period between scale-down events (in seconds)
+    # Longer than scale-up to prevent flapping
+    periodSeconds: 1200  # 20 minutes
