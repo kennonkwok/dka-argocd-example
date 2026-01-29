@@ -26,3 +26,8 @@ charts/**/*.tgz
 *.log
 *.bak
 .*.swp
+
+# Deployment script artifacts
+.argocd-credentials
+deployment-summary.txt
+scripts/*.log

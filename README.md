@@ -114,9 +114,74 @@ To deploy this example, you need:
 3. **kubectl**: Configured to access your cluster
 4. **Datadog Account**: With API and Application keys ([sign up](https://www.datadoghq.com/))
 
+### Quick Start with Minikube
+
+For a fully automated local deployment, we provide a comprehensive bash script that:
+- Creates and manages a minikube cluster
+- Installs ArgoCD
+- Creates Datadog secrets
+- Deploys all applications with proper wave ordering
+- Verifies the complete deployment
+
+**Requirements for automated script:**
+- minikube installed
+- kubectl installed
+- Docker (or chosen minikube driver) running
+- curl or wget installed
+
 ## How to Use This Repository
 
-### Option 1: Use as a Reference
+### Option 1: Automated Minikube Deployment (Recommended for Testing)
+
+The fastest way to see this example in action is using our automated deployment script:
+
+```bash
+# Set your Datadog credentials
+export DD_API_KEY=your-datadog-api-key
+export DD_APP_KEY=your-datadog-app-key
+
+# Run the deployment script
+./scripts/deploy-minikube.sh
+```
+
+The script will:
+1. ✓ Validate prerequisites (minikube, kubectl, credentials)
+2. ✓ Create or start a minikube cluster (4 CPUs, 8GB RAM)
+3. ✓ Install ArgoCD and retrieve admin password
+4. ✓ Create Datadog secret with your credentials
+5. ✓ Deploy the root ArgoCD application
+6. ✓ Monitor wave-based deployment (Operator → Agent → NGINX)
+7. ✓ Verify all components are healthy
+8. ✓ Display access information and next steps
+
+**Deployment time:** 10-15 minutes for a fresh cluster
+
+**Customization options:**
+```bash
+# Custom cluster resources
+./scripts/deploy-minikube.sh --cpus 8 --memory 16384
+
+# Different profile name
+./scripts/deploy-minikube.sh --profile my-dka-cluster
+
+# Auto-cleanup on failure
+./scripts/deploy-minikube.sh --cleanup-on-error
+
+# View all options
+./scripts/deploy-minikube.sh --help
+```
+
+After deployment, access ArgoCD:
+```bash
+# Port-forward ArgoCD UI (credentials shown in script output)
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+
+# Open https://localhost:8080
+# Username: admin
+# Password: (displayed by script)
+```
+
+### Option 2: Use as a Reference
 
 This repository is designed as a **reference implementation**. Study the files to understand:
 - How to structure ArgoCD Applications with sync waves
@@ -126,9 +191,9 @@ This repository is designed as a **reference implementation**. Study the files t
 
 Adapt the patterns to your own repository and requirements.
 
-### Option 2: Deploy to Your Cluster
+### Option 3: Manual Deployment to Your Cluster
 
-If you want to test this example directly:
+If you want to deploy manually to an existing cluster:
 
 #### Step 1: Create the Datadog Secret
 
@@ -412,6 +477,55 @@ kubectl logs -n datadog -l app=datadog-cluster-agent
 # Verify workload autoscaling is enabled
 kubectl get datadogagent -n datadog -o jsonpath='{.spec.features.workloadAutoscaling.enabled}'
 ```
+
+## Deployment Script Features
+
+The `scripts/deploy-minikube.sh` script provides a production-ready deployment experience:
+
+### Intelligent Cluster Management
+- Detects existing clusters and reuses them
+- Starts stopped clusters automatically
+- Configurable resources (CPU, memory, driver)
+- Multiple profile support for parallel environments
+
+### Comprehensive Error Handling
+- Validates all prerequisites before starting
+- Checks Datadog credentials for placeholder values
+- Provides detailed error messages with troubleshooting steps
+- Structured exit codes for programmatic use
+- Optional auto-cleanup on failure (`--cleanup-on-error`)
+
+### Wave-Based Deployment Monitoring
+- Tracks each sync wave independently (Operator → Agent → NGINX)
+- Monitors both sync status and health status
+- Per-component verification with timeouts
+- Displays progress with elapsed time
+- Shows detailed status for debugging failures
+
+### Idempotency
+- Safe to run multiple times
+- Reuses existing clusters and ArgoCD installations
+- Prompts before recreating existing secrets
+- Skips unnecessary operations automatically
+
+### Repository URL Detection
+- Auto-detects git remote URL for forks
+- Converts SSH URLs to HTTPS automatically
+- Supports manual override with `--repo-url`
+- Works seamlessly with the original repository
+
+### Rich Output
+- Color-coded logging (info, success, error, warning)
+- Progress indicators with timeouts
+- Comprehensive deployment summary
+- ArgoCD credentials and access instructions
+- Next steps and useful commands
+
+### Security
+- Never logs API/App keys to console
+- Validates credential format before use
+- Warns about development-only configurations
+- Adds credential files to .gitignore
 
 ## Additional Resources
 
