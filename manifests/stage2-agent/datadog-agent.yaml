@@ -26,12 +26,13 @@ spec:
 
     # Kubelet configuration for metrics collection
     kubelet:
-      tlsVerify: false  # Set to true in production with proper certificates
+      tlsVerify: false # Set to true in production with proper certificates
 
   features:
     # Enable workload autoscaling (Datadog Kubernetes Autoscaling)
-    workloadAutoscaling:
-      enabled: true
+    autoscaling:
+      workload:
+        enabled: true
 
     # Enable event collection with unbundled events
     eventCollection:

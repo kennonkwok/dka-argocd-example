@@ -33,28 +33,4 @@ spec:
   constraints:
     minReplicas: {{ .Values.autoscaler.minReplicas }}
     maxReplicas: {{ .Values.autoscaler.maxReplicas }}
-
-  # Scaling behavior policies
-  policy:
-    # Scale-up policy
-    upscale:
-      strategy: EventBased  # Scale up based on events/metrics
-      rules:
-        - type: Percent
-          value: {{ .Values.autoscaler.scaleUp.percentIncrease }}  # Increase by N%
-          periodSeconds: {{ .Values.autoscaler.scaleUp.periodSeconds }}  # Cooldown period
-
-    # Scale-down policy
-    downscale:
-      strategy: EventBased  # Scale down based on events/metrics
-      rules:
-        - type: Percent
-          value: {{ .Values.autoscaler.scaleDown.percentDecrease }}  # Decrease by N%
-          periodSeconds: {{ .Values.autoscaler.scaleDown.periodSeconds }}  # Cooldown period
-
-  # Scaling objectives (metrics to optimize)
-  objectives:
-    - type: cpu
-      source: Datadog  # Use Datadog metrics (vs. Kubernetes metrics)
-      value: {{ .Values.autoscaler.targetCPUUtilization }}  # Target CPU utilization percentage
 {{- end }}

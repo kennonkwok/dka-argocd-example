@@ -42,7 +42,7 @@ set -euo pipefail
 MINIKUBE_PROFILE="${MINIKUBE_PROFILE:-dka-demo}"
 MINIKUBE_CPUS="${MINIKUBE_CPUS:-4}"
 MINIKUBE_MEMORY="${MINIKUBE_MEMORY:-8192}"
-MINIKUBE_DRIVER="${MINIKUBE_DRIVER:-docker}"
+MINIKUBE_DRIVER="${MINIKUBE_DRIVER:-vfkit}"
 REPO_URL="${REPO_URL:-}"
 CLEANUP_ON_ERROR="${CLEANUP_ON_ERROR:-false}"
 SKIP_VERIFY="${SKIP_VERIFY:-false}"
@@ -708,13 +708,20 @@ deploy_root_application() {
         log_info "Manifests will be applied with detected URL"
 
         # Apply with kustomize to patch URL
-        local temp_kustomization="/tmp/kustomization-$$.yaml"
+        local temp_dir="/tmp/kustomize-$$"
+        mkdir -p "$temp_dir"
+
+        # Copy root-app.yaml to temp directory so we can use relative path
+        cp argocd/root-app.yaml "$temp_dir/root-app.yaml"
+
+        local temp_kustomization="$temp_dir/kustomization.yaml"
+
         cat > "$temp_kustomization" << EOF
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ../../argocd/root-app.yaml
+  - root-app.yaml
 
 patches:
   - patch: |-
@@ -723,17 +730,17 @@ patches:
         value: $REPO_URL
     target:
       kind: Application
-      name: root-app
+      name: dka-root
 EOF
 
         log_info "Applying root application with patched repository URL..."
-        if ! kubectl apply -k "$(dirname "$temp_kustomization")"; then
-            rm -f "$temp_kustomization"
+        if ! kubectl apply -k "$temp_dir"; then
+            rm -rf "$temp_dir"
             log_error "Failed to apply root application"
             exit $EXIT_APP_DEPLOYMENT_FAILED
         fi
 
-        rm -f "$temp_kustomization"
+        rm -rf "$temp_dir"
     else
         log_info "Repository URL matches manifest, applying directly..."
         if ! kubectl apply -f argocd/root-app.yaml; then
@@ -748,7 +755,7 @@ EOF
     log_info "Waiting for root application to be created in ArgoCD..."
     if ! wait_for_condition \
         "Root application exists" \
-        "kubectl get application root-app -n argocd" \
+        "kubectl get application dka-root -n argocd" \
         60; then
         log_error "Root application was not created"
         exit $EXIT_APP_DEPLOYMENT_FAILED
@@ -1071,7 +1078,7 @@ verify_deployment() {
     local all_synced=true
     local all_healthy=true
 
-    local apps=("root-app" "datadog-operator" "datadog-agent" "nginx-dka-demo")
+    local apps=("dka-root" "datadog-operator" "datadog-agent" "nginx-dka-demo")
     for app in "${apps[@]}"; do
         local sync_status
         local health_status
