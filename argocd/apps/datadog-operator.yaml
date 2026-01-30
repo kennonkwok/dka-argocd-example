@@ -9,7 +9,7 @@ metadata:
   name: datadog-operator
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "0"  # Deploy first
+    argocd.argoproj.io/sync-wave: "0" # Deploy first
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -20,7 +20,7 @@ spec:
     # Source 1: Datadog Operator Helm chart
     - repoURL: https://helm.datadoghq.com
       chart: datadog-operator
-      targetRevision: 2.11.1  # Pin specific version for reproducibility
+      targetRevision: 2.17.0 # Pin specific version for reproducibility
       helm:
         releaseName: datadog-operator
         values: |
@@ -35,15 +35,15 @@ spec:
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: datadog  # Operator will be installed in datadog namespace
+    namespace: datadog # Operator will be installed in datadog namespace
 
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true  # Create datadog namespace if it doesn't exist
-      - ServerSideApply=true  # Use server-side apply for CRDs
+      - CreateNamespace=true # Create datadog namespace if it doesn't exist
+      - ServerSideApply=true # Use server-side apply for CRDs
     retry:
       limit: 5
       backoff:
