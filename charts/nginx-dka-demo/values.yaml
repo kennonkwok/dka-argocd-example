@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 # Number of initial replicas for the NGINX deployment
-replicaCount: 5
+replicaCount: 3
 
 # NGINX image configuration
 image:
@@ -54,4 +54,4 @@ autoscaler:
 
     # Cooldown period between scale-down events (in seconds)
     # Longer than scale-up to prevent flapping
-    periodSeconds: 1200  # 20 minutes
+    periodSeconds: 1200 # 20 minutes
