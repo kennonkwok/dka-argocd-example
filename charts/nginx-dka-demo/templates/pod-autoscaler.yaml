@@ -31,4 +31,12 @@ spec:
   constraints:
     minReplicas: {{ .Values.autoscaler.minReplicas }}
     maxReplicas: {{ .Values.autoscaler.maxReplicas }}
+
+  objectives:
+    - type: PodResource
+      podResource:
+        name: cpu
+        value:
+          type: Utilization
+          utilization: 75
 {{- end }}
