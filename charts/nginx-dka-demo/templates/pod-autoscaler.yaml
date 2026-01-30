@@ -26,8 +26,6 @@ spec:
   # Policy for applying scaling decisions
   applyPolicy:
     mode: Apply  # Actually apply scaling decisions (vs. Dryrun)
-    update:
-      strategy: Auto  # Automatically update when recommendations change
 
   # Scaling constraints
   constraints:
