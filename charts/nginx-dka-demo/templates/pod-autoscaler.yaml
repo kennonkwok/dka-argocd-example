@@ -3,7 +3,7 @@
 # DatadogPodAutoscaler
 # Manages scaling of the NGINX deployment based on Datadog metrics.
 # This CRD is provided by the Datadog Operator.
-apiVersion: datadoghq.com/v1alpha1
+apiVersion: datadoghq.com/v1alpha2
 kind: DatadogPodAutoscaler
 metadata:
   name: {{ .Release.Name }}-dpa

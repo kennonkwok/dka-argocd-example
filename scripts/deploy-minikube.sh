@@ -931,10 +931,17 @@ monitor_wave_deployment() {
 
     # Verify agent DaemonSet
     log_info "Verifying Datadog Agent DaemonSet..."
-    if ! kubectl get daemonset -n datadog -l app=datadog >/dev/null 2>&1; then
+
+    # Get the DaemonSet name (operator creates it based on the DatadogAgent CR name)
+    local daemonset_name
+    daemonset_name=$(kubectl get daemonset -n datadog -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+
+    if [[ -z "$daemonset_name" ]]; then
         log_error "Datadog Agent DaemonSet not found"
         exit $EXIT_VERIFICATION_FAILED
     fi
+
+    log_success "Found DaemonSet: $daemonset_name"
 
     # Wait for agent pods to be running
     log_info "Waiting for Datadog Agent pods to be ready..."
@@ -944,8 +951,8 @@ monitor_wave_deployment() {
     for i in {1..12}; do
         local desired
         local ready
-        desired=$(kubectl get daemonset -n datadog -l app=datadog -o jsonpath='{.items[0].status.desiredNumberScheduled}' 2>/dev/null || echo "0")
-        ready=$(kubectl get daemonset -n datadog -l app=datadog -o jsonpath='{.items[0].status.numberReady}' 2>/dev/null || echo "0")
+        desired=$(kubectl get daemonset "$daemonset_name" -n datadog -o jsonpath='{.status.desiredNumberScheduled}' 2>/dev/null || echo "0")
+        ready=$(kubectl get daemonset "$daemonset_name" -n datadog -o jsonpath='{.status.numberReady}' 2>/dev/null || echo "0")
 
         if [[ "$desired" -gt 0 ]] && [[ "$ready" -eq "$desired" ]]; then
             agent_pods_ready=true
@@ -964,8 +971,14 @@ monitor_wave_deployment() {
 
     # Verify cluster agent deployment
     log_info "Verifying Datadog Cluster Agent deployment..."
-    if kubectl get deployment -n datadog -l app=datadog-cluster-agent >/dev/null 2>&1; then
-        if kubectl wait deployment -n datadog -l app=datadog-cluster-agent --for=condition=Available --timeout=120s 2>/dev/null; then
+
+    # Find cluster agent deployment (name typically contains "cluster-agent")
+    local cluster_agent_deployment
+    cluster_agent_deployment=$(kubectl get deployment -n datadog -o jsonpath='{.items[?(@.metadata.name contains "cluster-agent")].metadata.name}' 2>/dev/null | awk '{print $1}' || echo "")
+
+    if [[ -n "$cluster_agent_deployment" ]]; then
+        log_info "Found Cluster Agent deployment: $cluster_agent_deployment"
+        if kubectl wait deployment "$cluster_agent_deployment" -n datadog --for=condition=Available --timeout=120s 2>/dev/null; then
             log_success "Datadog Cluster Agent is ready"
         else
             log_warning "Cluster Agent deployment not ready yet, but continuing..."
