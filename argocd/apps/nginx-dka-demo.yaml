@@ -9,7 +9,7 @@ metadata:
   name: nginx-dka-demo
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "2"  # Deploy after agent
+    argocd.argoproj.io/sync-wave: "2" # Deploy after agent
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -18,7 +18,7 @@ spec:
   source:
     repoURL: https://github.com/kennonkwok/dka-argocd-example.git
     targetRevision: HEAD
-    path: charts/nginx-dka-demo  # Helm chart in Git repository
+    path: charts/nginx-dka-demo # Helm chart in Git repository
     helm:
       # Override default values if needed
       # values: |
@@ -37,10 +37,17 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true  # Create nginx-dka-demo namespace
+      - CreateNamespace=true # Create nginx-dka-demo namespace
     retry:
       limit: 5
       backoff:
         duration: 5s
         factor: 2
         maxDuration: 3m
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: nginx-dka-demo
+      namespace: nginx-dka-demo
+      managedFieldsManagers:
+        - datadog-cluster-agent
