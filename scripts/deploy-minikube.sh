@@ -538,12 +538,12 @@ install_argocd() {
     local argocd_manifest="https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml"
 
     if command -v curl &> /dev/null; then
-        if ! curl -sSL "$argocd_manifest" | kubectl apply -n argocd -f -; then
+        if ! curl -sSL "$argocd_manifest" | kubectl apply -n argocd --server-side --force-conflicts -f -; then
             log_error "Failed to install ArgoCD"
             exit $EXIT_ARGOCD_INSTALL_FAILED
         fi
     else
-        if ! wget -qO- "$argocd_manifest" | kubectl apply -n argocd -f -; then
+        if ! wget -qO- "$argocd_manifest" | kubectl apply -n argocd --server-side --force-conflicts -f -; then
             log_error "Failed to install ArgoCD"
             exit $EXIT_ARGOCD_INSTALL_FAILED
         fi

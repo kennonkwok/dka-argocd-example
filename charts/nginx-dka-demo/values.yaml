@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 # Number of initial replicas for the NGINX deployment
-replicaCount: 3
+replicaCount: 7
 
 # NGINX image configuration
 image:
